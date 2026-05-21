@@ -4,13 +4,14 @@ import { PomodoroTimer } from '../components/PomodoroTimer';
 export default function PomodoroPage() {
   return (
     <div>
-      <header className="pb-5 border-b border-slate-200 dark:border-white/5 mb-8 text-center sm:text-left">
-        <h2 className="text-xl font-extrabold tracking-tight dark:text-white text-slate-850 flex items-center justify-center sm:justify-start gap-2">
-          <Timer className="w-5 h-5 text-blue-500" />
-          Pomodoro
+      <header className="pb-6 mb-6 text-center max-w-md mx-auto">
+        <h2 className="text-lg font-semibold tracking-tight text-[var(--text-primary)] flex items-center justify-center gap-2 font-display">
+          <Timer className="w-4 h-4 text-cyan-600/80 dark:text-cyan-400/80" strokeWidth={1.75} />
+          Focus grove
         </h2>
-        <p className="text-xs text-slate-500 mt-0.5">
-          Focus sessions with configurable work and break intervals
+        <p className="text-xs text-[var(--text-secondary)] mt-2 leading-relaxed">
+          Each session grows a procedural tree in your persistent ecosystem. Longer focus, deeper
+          roots.
         </p>
       </header>
       <PomodoroTimer />

@@ -1,13 +1,28 @@
-import { useState, useMemo } from 'react';
-import { Outlet } from 'react-router-dom';
+import { useState, useMemo, useEffect } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
+import { AnimatePresence } from 'motion/react';
 import { Sidebar } from './Sidebar';
+import { AmbientBackground } from './ambient/AmbientBackground';
+import { AmbientSettingsProvider } from '../contexts/AmbientSettingsContext';
+import { SoundscapeProvider } from '../contexts/SoundscapeContext';
+import { SoundscapeMiniPlayer } from './soundscape/SoundscapeMiniPlayer';
+import { QuickActionsMenu } from './QuickActionsMenu';
+import { MotionPage } from './motion/MotionPage';
+import { UserProfileControls } from './UserProfileControls';
+import {
+  NotificationPermissionBanner,
+  enableNotificationsFlow,
+} from './notifications/NotificationPermissionBanner';
 import { useTheme } from '../hooks/useTheme';
 import { useHabits } from '../hooks/useHabits';
+import { useNotificationPrefs } from '../hooks/useNotificationPrefs';
+import { useNotificationScheduler } from '../hooks/useNotificationScheduler';
 import { useLocalStorageString } from '../hooks/useLocalStorage';
 import { STORAGE_KEYS } from '../constants/storage';
 import { BRAND } from '../constants/brand';
 import { calculateStreak } from '../utils';
 import type { ThemeMode } from '../types';
+import type { AppOutletContext } from '../types/appContext';
 
 export function AppLayout() {
   const { theme, toggleTheme } = useTheme();
@@ -17,46 +32,87 @@ export function AppLayout() {
     BRAND.defaultUsername,
   );
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { prefs, setPrefs, permission } = useNotificationPrefs();
+  useNotificationScheduler();
+
+  const showPermissionBanner =
+    (permission === 'default' && !prefs.permissionAsked) ||
+    (permission === 'denied' && prefs.enabled);
+
+  const location = useLocation();
+  const isDashboard =
+    location.pathname === '/app' || location.pathname === '/app/';
 
   const maxStreak = useMemo(() => {
     if (habits.length === 0) return 0;
     return Math.max(...habits.map((h) => calculateStreak(h.logs).currentStreak));
   }, [habits]);
 
-  const bgClass =
-    theme === 'dark'
-      ? 'bg-[#040405] text-[#f8fafc]'
-      : 'bg-[#eef1f6] text-[#0f172a]';
+  useEffect(() => {
+    document.documentElement.classList.add('app-route-active');
+    document.body.classList.add('app-route-active');
+    return () => {
+      document.documentElement.classList.remove('app-route-active');
+      document.body.classList.remove('app-route-active');
+    };
+  }, []);
 
   return (
-    <div className={`min-h-screen w-full transition-all duration-500 overflow-x-hidden ${bgClass}`}>
-      <div className="absolute top-0 inset-x-0 h-[500px] overflow-hidden pointer-events-none select-none -z-10 opacity-30">
-        <div
-          className={`absolute -top-[40%] left-[10%] w-[500px] h-[500px] rounded-full blur-[130px] transition-all duration-700 ${
-            theme === 'dark' ? 'bg-indigo-600/15' : 'bg-indigo-300/10'
-          }`}
+    <AmbientSettingsProvider>
+      <SoundscapeProvider>
+      <div className="app-shell min-h-screen w-full overflow-x-hidden text-[var(--text-primary)]">
+        <AmbientBackground theme={theme as ThemeMode} />
+
+        <div className="app-shell-content w-full lg:flex lg:items-stretch">
+        <Sidebar
+          mobileOpen={mobileOpen}
+          onMobileClose={() => setMobileOpen(false)}
+          onMobileOpen={() => setMobileOpen(true)}
         />
-        <div
-          className={`absolute -top-[30%] right-[10%] w-[500px] h-[500px] rounded-full blur-[130px] transition-all duration-700 ${
-            theme === 'dark' ? 'bg-blue-600/15' : 'bg-blue-300/10'
-          }`}
-        />
+
+        <main className="flex-1 min-w-0 w-full min-h-screen pb-44 lg:pb-20 relative px-4 sm:px-6 lg:px-8 max-w-7xl lg:mx-auto pt-16 lg:pt-6 selection:bg-cyan-500/25">
+          {!isDashboard && (
+            <div className="flex justify-end mb-4 lg:mb-5">
+              <UserProfileControls
+                username={username}
+                onUsernameChange={setUsername}
+                maxStreak={maxStreak}
+                theme={theme as ThemeMode}
+                onToggleTheme={toggleTheme}
+              />
+            </div>
+          )}
+          <NotificationPermissionBanner
+            visible={showPermissionBanner}
+            permission={permission}
+            onEnable={() => void enableNotificationsFlow(setPrefs)}
+            onDismiss={() => setPrefs((p) => ({ ...p, permissionAsked: true }))}
+          />
+          <AnimatePresence mode="wait" initial={false}>
+            <div key={location.pathname}>
+              <MotionPage>
+                <Outlet
+                  context={
+                    {
+                      theme: theme as ThemeMode,
+                      username,
+                      setUsername,
+                      maxStreak,
+                      toggleTheme,
+                    } satisfies AppOutletContext
+                  }
+                />
+              </MotionPage>
+            </div>
+          </AnimatePresence>
+        </main>
+        </div>
+        <div className="floating-controls-dock" aria-label="Quick controls">
+          <QuickActionsMenu habits={habits} />
+          <SoundscapeMiniPlayer />
+        </div>
       </div>
-
-      <Sidebar
-        theme={theme as ThemeMode}
-        onToggleTheme={toggleTheme}
-        username={username}
-        onUsernameChange={setUsername}
-        maxStreak={maxStreak}
-        mobileOpen={mobileOpen}
-        onMobileClose={() => setMobileOpen(false)}
-        onMobileOpen={() => setMobileOpen(true)}
-      />
-
-      <main className="lg:pl-[4.5rem] min-h-screen pb-20 relative px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-16 lg:pt-6 selection:bg-blue-500/30 transition-[padding] duration-300">
-        <Outlet context={{ theme, username }} />
-      </main>
-    </div>
+      </SoundscapeProvider>
+    </AmbientSettingsProvider>
   );
 }

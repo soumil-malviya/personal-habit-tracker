@@ -83,7 +83,7 @@ export function ModernCalendar({ selected, onSelect, getMarkers }: ModernCalenda
               setViewDate(new Date(now.getFullYear(), now.getMonth(), 1));
               onSelect(now);
             }}
-            className="text-[10px] font-bold uppercase tracking-widest text-blue-500 hover:text-blue-400 mt-0.5 transition-colors"
+            className="text-[10px] font-bold uppercase tracking-widest text-cyan-500 hover:text-cyan-400 mt-0.5 transition-colors"
           >
             Jump to today
           </button>
@@ -154,7 +154,7 @@ export function ModernCalendar({ selected, onSelect, getMarkers }: ModernCalenda
                   {markers.hasTodo && (
                     <span
                       className={`w-1.5 h-1.5 rounded-full ${
-                        isSelected ? 'bg-blue-200' : 'bg-blue-500'
+                        isSelected ? 'bg-cyan-200' : 'bg-cyan-500'
                       }`}
                     />
                   )}

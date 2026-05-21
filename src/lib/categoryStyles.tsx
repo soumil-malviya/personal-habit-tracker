@@ -16,7 +16,7 @@ export function getCategoryColorClass(category: CategoryType) {
     case 'mindfulness':
       return 'dark:text-emerald-400 text-emerald-650 dark:bg-emerald-500/10 bg-emerald-500/15 border-emerald-500/25';
     case 'work':
-      return 'dark:text-blue-400 text-blue-650 dark:bg-blue-500/10 bg-blue-500/15 border-blue-500/25';
+      return 'dark:text-cyan-400 text-cyan-700 dark:bg-cyan-500/10 bg-cyan-500/15 border-cyan-500/25';
     case 'creative':
       return 'dark:text-pink-400 text-pink-650 dark:bg-pink-500/10 bg-pink-500/15 border-pink-500/25';
   }
@@ -57,7 +57,7 @@ export function getCategoryIcon(category: CategoryType) {
     case 'mindfulness':
       return <Sparkles className="w-5 h-5 dark:text-emerald-400 text-emerald-605" />;
     case 'work':
-      return <Briefcase className="w-5 h-5 dark:text-blue-400 text-blue-605" />;
+      return <Briefcase className="w-5 h-5 dark:text-cyan-400 text-cyan-600" />;
     case 'creative':
       return <Palette className="w-5 h-5 dark:text-pink-400 text-pink-605" />;
   }

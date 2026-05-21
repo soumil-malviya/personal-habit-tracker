@@ -4,9 +4,11 @@ interface ThemeToggleProps {
   theme: ThemeMode;
   onToggle: () => void;
   compact?: boolean;
+  /** Compact icon button for headers and toolbars */
+  iconOnly?: boolean;
 }
 
-export function ThemeToggle({ theme, onToggle, compact = false }: ThemeToggleProps) {
+export function ThemeToggle({ theme, onToggle, compact = false, iconOnly = false }: ThemeToggleProps) {
   const isDark = theme === 'dark';
 
   return (
@@ -14,9 +16,11 @@ export function ThemeToggle({ theme, onToggle, compact = false }: ThemeTogglePro
       type="button"
       onClick={onToggle}
       className={`group relative flex items-center justify-center rounded-xl transition-all duration-300 ${
-        compact
-          ? 'w-10 h-10 mx-auto group-hover/sb:w-full group-hover/sb:gap-2 group-hover/sb:py-2.5 group-hover/sb:px-3 group-hover/sb:border group-hover/sb:border-slate-200 dark:group-hover/sb:border-white/5 group-hover/sb:hover:bg-slate-100 dark:group-hover/sb:hover:bg-white/[0.05]'
-          : 'w-full gap-2 py-2.5 px-3 border border-slate-200 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-white/[0.05]'
+        iconOnly
+          ? 'w-10 h-10 border border-slate-200/80 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/[0.06] shrink-0'
+          : compact
+            ? 'w-10 h-10 mx-auto group-hover/sb:w-full group-hover/sb:gap-2 group-hover/sb:py-2.5 group-hover/sb:px-3 group-hover/sb:border group-hover/sb:border-slate-200 dark:group-hover/sb:border-white/5 group-hover/sb:hover:bg-slate-100 dark:group-hover/sb:hover:bg-white/[0.05]'
+            : 'w-full gap-2 py-2.5 px-3 border border-slate-200 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-white/[0.05]'
       }`}
       aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
       title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
@@ -29,7 +33,7 @@ export function ThemeToggle({ theme, onToggle, compact = false }: ThemeTogglePro
         }`}
         aria-hidden
       />
-      <span className="relative flex items-center justify-center w-9 h-9">
+      <span className={`relative flex items-center justify-center ${iconOnly ? 'w-8 h-8' : 'w-9 h-9'}`}>
         {/* Sun — visible in dark mode (click to go light) */}
         <span
           className={`absolute transition-all duration-500 ${
@@ -85,7 +89,7 @@ export function ThemeToggle({ theme, onToggle, compact = false }: ThemeTogglePro
           </svg>
         </span>
       </span>
-      {compact ? (
+      {iconOnly ? null : compact ? (
         <span className="relative hidden group-hover/sb:inline text-xs font-semibold text-slate-600 dark:text-slate-400 whitespace-nowrap">
           {isDark ? 'Light mode' : 'Dark mode'}
         </span>

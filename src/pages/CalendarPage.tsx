@@ -55,7 +55,7 @@ export default function CalendarPage() {
     <div className="max-w-5xl mx-auto">
       <header className="pb-5 border-b border-slate-200 dark:border-white/5 mb-6">
         <h2 className="text-xl font-extrabold tracking-tight dark:text-white text-slate-850 flex items-center gap-2">
-          <CalendarIcon className="w-5 h-5 text-blue-500" />
+          <CalendarIcon className="w-5 h-5 text-cyan-500" />
           Calendar
         </h2>
         <p className="text-xs text-slate-500 mt-0.5">
@@ -76,7 +76,7 @@ export default function CalendarPage() {
               Habits
             </span>
             <span className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-400">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-sm shadow-blue-500/50" />
+              <span className="w-2.5 h-2.5 rounded-full bg-cyan-500 shadow-sm shadow-cyan-500/50" />
               To‑dos
             </span>
             <span className="text-xs text-slate-400 dark:text-slate-500 ml-auto font-mono">
@@ -89,14 +89,14 @@ export default function CalendarPage() {
           <div className="glass-panel p-5 rounded-2xl sticky top-6">
             <div className="flex items-start justify-between gap-2 mb-4">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-blue-500">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-500">
                   Selected day
                 </p>
                 <h3 className="text-lg font-extrabold dark:text-white text-slate-800 mt-0.5">
                   {formatFriendlyDate(selectedStr)}
                 </h3>
               </div>
-              <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500">
+              <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-500">
                 <Sparkles className="w-4 h-4" />
               </div>
             </div>
@@ -130,9 +130,9 @@ export default function CalendarPage() {
 
             <section>
               <h4 className="text-[10px] font-bold uppercase text-slate-500 mb-2.5 flex items-center gap-1.5">
-                <ListTodo className="w-3.5 h-3.5 text-blue-500" />
+                <ListTodo className="w-3.5 h-3.5 text-cyan-500" />
                 Scheduled to‑dos
-                <span className="ml-auto text-blue-600 dark:text-blue-400 font-mono">
+                <span className="ml-auto text-cyan-600 dark:text-cyan-400 font-mono">
                   {todosOnDay.length}
                 </span>
               </h4>
@@ -148,12 +148,12 @@ export default function CalendarPage() {
                       className={`text-sm font-semibold py-2.5 px-3 rounded-xl border flex items-center gap-2 ${
                         t.completed
                           ? 'line-through opacity-60 bg-slate-100 dark:bg-white/[0.03] border-slate-200 dark:border-white/5 text-slate-500'
-                          : 'bg-blue-500/10 border-blue-500/20 text-slate-800 dark:text-slate-200'
+                          : 'bg-cyan-500/10 border-cyan-500/20 text-slate-800 dark:text-slate-200'
                       }`}
                     >
                       <span
                         className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                          t.completed ? 'bg-slate-400' : 'bg-blue-500'
+                          t.completed ? 'bg-slate-400' : 'bg-cyan-500'
                         }`}
                       />
                       {t.title}

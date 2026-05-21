@@ -1,4 +1,5 @@
-import { useState, useMemo, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Plus,
   Trash2,
@@ -16,6 +17,8 @@ import type { Todo } from '../types';
 
 export default function TodoPage() {
   const { todos, addTodo, updateTodo, deleteTodo, toggleTodo } = useTodos();
+  const location = useLocation();
+  const titleInputRef = useRef<HTMLInputElement | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [scheduledDate, setScheduledDate] = useState('');
@@ -67,6 +70,12 @@ export default function TodoPage() {
 
   const today = getLocalDateString(0);
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('action') !== 'add') return;
+    window.setTimeout(() => titleInputRef.current?.focus(), 120);
+  }, [location.search]);
+
   return (
     <div className="max-w-2xl mx-auto">
       <header className="pb-6 mb-6 border-b border-slate-200 dark:border-white/5">
@@ -105,6 +114,7 @@ export default function TodoPage() {
           </span>
         </div>
         <input
+          ref={titleInputRef}
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}

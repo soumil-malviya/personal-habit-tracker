@@ -1,4 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { Link, useLocation, useOutletContext } from 'react-router-dom';
+import { UserProfileControls } from '../components/UserProfileControls';
+import { AmbientSettingsPanel } from '../components/ambient/AmbientSettingsPanel';
+import type { AppOutletContext } from '../types/appContext';
 import { 
   Plus, 
   Trash2, 
@@ -13,10 +17,12 @@ import {
   Activity, 
   X, 
   Clock, 
+  Timer,
   ArrowUpRight, 
   Download, 
   Upload,
   AlertCircle,
+  ListPlus,
 } from 'lucide-react';
 import { CategoryType, FrequencyType, DifficultyType, Habit } from '../types';
 import {
@@ -35,6 +41,10 @@ import {
 import { BRAND } from '../constants/brand';
 
 export default function Dashboard() {
+  const { username, setUsername, maxStreak, theme, toggleTheme } =
+    useOutletContext<AppOutletContext>();
+  const location = useLocation();
+
   // ----------------------------------------------------
   // States
   // ----------------------------------------------------
@@ -186,6 +196,15 @@ export default function Dashboard() {
     if (habitsWithStats.length === 0) return 0;
     return Math.max(...habitsWithStats.map(h => h.currentStreak));
   }, [habitsWithStats]);
+
+  const topStreakHabit = useMemo(() => {
+    return habitsWithStats.reduce<(typeof habitsWithStats)[number] | null>((best, habit) => {
+      if (!best || habit.currentStreak > best.currentStreak) return habit;
+      return best;
+    }, null);
+  }, [habitsWithStats]);
+
+  const pendingTodayCount = Math.max(totalActiveHabitsCount - todayCompletedCount, 0);
 
   // Overall satisfaction score based on past 30 days complete rate
   const consistencyIndex = useMemo(() => {
@@ -363,35 +382,71 @@ export default function Dashboard() {
     return `${mins}m`;
   };
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('view') !== 'today') return;
+    setSearchQuery('');
+    setActiveCategoryFilter('all');
+    setCompletionFilter('all');
+    window.setTimeout(() => {
+      document.getElementById('habits-matrix-panel')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }, 120);
+  }, [location.search]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('action') !== 'add-habit') return;
+    setIsAddingHabit(true);
+    window.setTimeout(() => {
+      document.getElementById('form-habit-name')?.focus();
+    }, 120);
+  }, [location.search]);
+
   return (
     <div>
-        <header className="pb-5 flex items-center justify-between border-b border-slate-200 dark:border-white/5 mb-6 gap-4" id="tracker-header">
-          <div>
+        <header
+          className="pb-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 dark:border-white/5 mb-6"
+          id="tracker-header"
+        >
+          <div className="min-w-0">
             <h2 className="text-xl font-extrabold tracking-tight dark:text-white text-slate-850">Dashboard</h2>
             <p className="text-xs text-slate-500 mt-0.5">Track habits and build streaks</p>
           </div>
-          <button
-            onClick={() => setIsSettingsOpen((prev) => !prev)}
-            className={`p-2.5 rounded-xl border transition-all active:scale-95 duration-200 cursor-pointer ${
-              isSettingsOpen
-                ? 'bg-blue-500/10 border-blue-500 text-blue-400'
-                : 'bg-white/[0.02] border border-slate-300 dark:border-white/5 text-slate-400 dark:hover:text-white hover:text-slate-800'
-            }`}
-            title="Backup settings"
-            id="settings-toggle-btn"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap sm:flex-nowrap sm:justify-end">
+            <UserProfileControls
+              username={username}
+              onUsernameChange={setUsername}
+              maxStreak={maxStreak}
+              theme={theme}
+              onToggleTheme={toggleTheme}
+            />
+            <button
+              type="button"
+              onClick={() => setIsSettingsOpen((prev) => !prev)}
+              className={`p-2.5 rounded-xl border transition-all active:scale-95 duration-200 cursor-pointer shrink-0 ${
+                isSettingsOpen
+                  ? 'bg-cyan-500/10 border-cyan-500 text-cyan-400'
+                  : 'bg-white/[0.02] border border-slate-300 dark:border-white/5 text-slate-400 dark:hover:text-white hover:text-slate-800'
+              }`}
+              title="Backup settings"
+              id="settings-toggle-btn"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+          </div>
         </header>
 
       {/* ----------------- COLLAPSIBLE SETTINGS & BACKUP DRAWER ----------------- */}
       {isSettingsOpen && (
-        <div className="glass-panel p-4 rounded-xl mb-6 border-blue-500/20 shadow-xl animate-entrance" id="settings-drawer">
+        <div className="glass-panel p-4 rounded-xl mb-6 border-cyan-500/20 shadow-xl animate-entrance" id="settings-drawer">
           <div className="flex justify-between items-center mb-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-blue-400">Settings & Personalization</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-cyan-400">Settings & Personalization</h4>
             <span className="text-[9px] dark:text-slate-450 text-slate-500 font-mono">Status: LocalStorage Connected</span>
           </div>
           <p className="text-xs dark:text-slate-400 text-slate-600 mb-4 leading-relaxed">
@@ -420,7 +475,7 @@ export default function Dashboard() {
             </label>
           </div>
 
-
+          <AmbientSettingsPanel theme={theme} />
         </div>
       )}
 
@@ -439,7 +494,7 @@ export default function Dashboard() {
           <div className="mt-2">
             <div className="w-full bg-slate-300 dark:bg-slate-800 rounded-full h-1 sm:h-1.5 overflow-hidden border border-slate-300 dark:border-white/5">
               <div 
-                className="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full transition-all duration-500 ease-out"
+                className="bg-gradient-to-r from-cyan-500 to-teal-500 h-full rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${todayCompletionRate}%` }}
               />
             </div>
@@ -478,6 +533,69 @@ export default function Dashboard() {
 
       </section>
 
+      <section className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-3 mb-6" id="dashboard-shortcuts">
+        <div className="glass-panel rounded-2xl p-4 sm:p-5 overflow-hidden relative">
+          <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-cyan-500/10 to-transparent pointer-events-none" />
+          <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="w-8 h-8 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-500 flex items-center justify-center">
+                  <Flame className="w-4 h-4" />
+                </span>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                  Streak overview
+                </p>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-black text-slate-850 dark:text-white">
+                  {maxActiveStreak}
+                </span>
+                <span className="text-xs font-bold text-orange-600 dark:text-orange-300">
+                  day active streak
+                </span>
+              </div>
+              <p className="text-xs text-[var(--text-secondary)] mt-1 truncate">
+                {topStreakHabit
+                  ? `${topStreakHabit.name} is leading today`
+                  : 'Add a routine to start building momentum'}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 sm:min-w-[15rem]">
+              <Link to="/app/pomodoro?action=start" className="dashboard-shortcut-card">
+                <Timer className="w-4 h-4 text-cyan-600 dark:text-cyan-300" />
+                <span>Focus</span>
+              </Link>
+              <Link to="/app?view=today" className="dashboard-shortcut-card">
+                <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-300" />
+                <span>Today</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="glass-panel rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+              Native shortcuts
+            </p>
+            <p className="text-sm font-extrabold text-slate-850 dark:text-white mt-1">
+              {pendingTodayCount === 0 ? 'All clear today' : `${pendingTodayCount} habits left`}
+            </p>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">
+              Use the floating button or Alt Shift A/F/H.
+            </p>
+          </div>
+          <Link
+            to="/app/todo?action=add"
+            className="w-11 h-11 rounded-2xl bg-cyan-600 text-white shadow-lg shadow-cyan-500/20 flex items-center justify-center active:scale-95 transition-all shrink-0"
+            aria-label="Quick-add task"
+          >
+            <ListPlus className="w-5 h-5" />
+          </Link>
+        </div>
+      </section>
+
       {/* ----------------- FILTER SHEETS & ACTIONS ----------------- */}
       <div className="space-y-4 mb-6" id="filters-container">
         
@@ -488,7 +606,7 @@ export default function Dashboard() {
               onClick={() => setActiveCategoryFilter('all')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition-all cursor-pointer border ${
                 activeCategoryFilter === 'all'
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10 border-blue-600'
+                  ? 'bg-cyan-600 text-white shadow-md shadow-cyan-500/10 border-cyan-600'
                   : 'bg-slate-200/60 hover:bg-slate-300/80 dark:bg-white/[0.02] text-slate-700 dark:text-slate-400 dark:hover:text-white border-slate-300 dark:border-white/5'
               }`}
             >
@@ -557,7 +675,7 @@ export default function Dashboard() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search routines & notes..."
-              className="bg-slate-200/60 dark:bg-slate-900/40 text-xs w-full text-slate-800 dark:text-white placeholder-slate-450 dark:placeholder-slate-500 border border-slate-300 dark:border-white/5 py-2.5 px-3.5 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+              className="bg-slate-200/60 dark:bg-slate-900/40 text-xs w-full text-slate-800 dark:text-white placeholder-slate-450 dark:placeholder-slate-500 border border-slate-300 dark:border-white/5 py-2.5 px-3.5 rounded-xl focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
               id="search-input"
             />
           </div>
@@ -603,7 +721,7 @@ export default function Dashboard() {
             {/* Main trigger button */}
             <button
               onClick={() => setIsAddingHabit(prev => !prev)}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs rounded-xl active:scale-95 transition-all flex items-center justify-center gap-1 shadow-lg shadow-blue-500/15 cursor-pointer"
+              className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs rounded-xl active:scale-95 transition-all flex items-center justify-center gap-1 shadow-lg shadow-cyan-500/15 cursor-pointer"
               id="toggle-add-form-btn"
             >
               {isAddingHabit ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
@@ -617,11 +735,11 @@ export default function Dashboard() {
       {isAddingHabit && (
         <form 
           onSubmit={handleAddNewHabit}
-          className="glass-panel p-5 rounded-xl mb-6 border-blue-500/20 shadow-xl animate-entrance"
+          className="glass-panel p-5 rounded-xl mb-6 border-cyan-500/20 shadow-xl animate-entrance"
           id="add-habit-form"
         >
           <div className="flex justify-between items-center mb-4 pb-2 border-b border-white/5">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-blue-400 flex items-center gap-1.5">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-cyan-400 flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5" /> Add a New Habit Routine
             </h3>
             <button
@@ -679,7 +797,7 @@ export default function Dashboard() {
                 <select
                   value={newHabitCategory}
                   onChange={(e) => setNewHabitCategory(e.target.value as CategoryType)}
-                  className="w-full bg-slate-200/50 dark:bg-slate-900/60 border border-slate-300 dark:border-white/5 py-2 px-2.5 rounded-xl text-xs text-slate-850 dark:text-white cursor-pointer focus:border-blue-500"
+                  className="w-full bg-slate-200/50 dark:bg-slate-900/60 border border-slate-300 dark:border-white/5 py-2 px-2.5 rounded-xl text-xs text-slate-850 dark:text-white cursor-pointer focus:border-cyan-500"
                   id="form-habit-category"
                 >
                   <option className="bg-slate-100 dark:bg-slate-950 text-emerald-600 dark:text-emerald-400" value="health">health 🍏</option>
@@ -695,7 +813,7 @@ export default function Dashboard() {
                 <select
                   value={newHabitFrequency}
                   onChange={(e) => setNewHabitFrequency(e.target.value as FrequencyType)}
-                  className="w-full bg-slate-200/50 dark:bg-slate-900/60 border border-slate-300 dark:border-white/5 py-2 px-2.5 rounded-xl text-xs text-slate-850 dark:text-white cursor-pointer focus:border-blue-500"
+                  className="w-full bg-slate-200/50 dark:bg-slate-900/60 border border-slate-300 dark:border-white/5 py-2 px-2.5 rounded-xl text-xs text-slate-850 dark:text-white cursor-pointer focus:border-cyan-500"
                   id="form-habit-frequency"
                 >
                   <option value="daily" className="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-white">daily</option>
@@ -715,7 +833,7 @@ export default function Dashboard() {
                     onClick={() => setNewHabitDifficulty(diff)}
                     className={`py-2 border capitalize text-[11px] font-semibold rounded-xl transition-all ${
                       newHabitDifficulty === diff
-                        ? 'bg-blue-500/10 border-blue-500 text-blue-700 dark:text-blue-300 font-bold shadow-sm'
+                        ? 'bg-cyan-500/10 border-cyan-500 text-cyan-700 dark:text-cyan-300 font-bold shadow-sm'
                         : 'bg-slate-200/55 dark:bg-white/[0.01] border-slate-300 dark:border-white/5 text-slate-500 dark:text-slate-400'
                     }`}
                   >
@@ -738,7 +856,7 @@ export default function Dashboard() {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl active:scale-95 transition-all text-center"
+              className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl active:scale-95 transition-all text-center"
               id="form-submit-btn"
             >
               Add Routine
@@ -750,7 +868,7 @@ export default function Dashboard() {
       {/* ----------------- PRIMARY HABITS MATRIX LIST WITH MOBILE FOCUS ----------------- */}
       {filteredHabits.length === 0 ? (
         <div className="glass-panel py-12 px-5 rounded-2xl text-center flex flex-col items-center justify-center max-w-md mx-auto border border-slate-300 dark:border-white/5" id="empty-state-notice">
-          <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl mb-3 text-blue-400 animate-pulse">
+          <div className="p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-xl mb-3 text-cyan-400 animate-pulse">
             <Sparkles className="w-6 h-6" />
           </div>
           <h3 className="text-sm font-bold dark:text-white text-slate-800 mb-1.5">No Routines Found</h3>
@@ -850,7 +968,7 @@ export default function Dashboard() {
                             }}
                             className={`flex flex-col items-center justify-between py-2 px-0.5 rounded-lg cursor-pointer transition-all active:scale-90 ${
                               isDayComplete 
-                                ? 'bg-blue-500/10 dark:bg-blue-500/10 border border-blue-500/30' 
+                                ? 'bg-cyan-500/10 dark:bg-cyan-500/10 border border-cyan-500/30' 
                                 : isToday 
                                   ? 'bg-slate-300/35 dark:bg-white/[0.04] border border-slate-350 dark:border-white/10' 
                                   : 'border border-transparent hover:bg-slate-300/20 dark:hover:bg-white/5'
@@ -859,7 +977,7 @@ export default function Dashboard() {
                           >
                             {/* Short Label */}
                             <span className={`text-[8px] font-bold leading-none mb-1.5 uppercase ${
-                              isToday ? 'dark:text-blue-400 text-blue-600' : 'dark:text-slate-500 text-slate-600'
+                              isToday ? 'dark:text-cyan-400 text-cyan-600' : 'dark:text-slate-500 text-slate-600'
                             }`}>
                               {labelShort}
                             </span>
@@ -928,24 +1046,24 @@ export default function Dashboard() {
       )}
 
       {/* ----------------- APPLE-STYLE LIQUID GLASS 30-DAY ACTIVITY MONITOR ----------------- */}
-      <section className="liquid-glass p-6 rounded-2xl mt-8 overflow-hidden select-none" id="usage-chart-section">
+      <section className="liquid-glass p-4 sm:p-6 rounded-2xl mt-8 overflow-hidden select-none" id="usage-chart-section">
         
         {/* Top Header Row with dynamic time display and date swiper */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <div>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 mb-6">
+          <div className="min-w-0">
             <span className="text-[10px] font-bold uppercase tracking-wider dark:text-slate-400 text-slate-600 block mb-1">Activity Duration</span>
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-black dark:text-white text-slate-800 tracking-tight">
+              <span className="text-2xl sm:text-3xl font-black dark:text-white text-slate-800 tracking-tight">
                 {selectedDayMinutesData.total > 0 ? formatMinutesFriendly(selectedDayMinutesData.total) : '0m'}
               </span>
-              <span className="text-[11px] dark:text-slate-500 text-slate-500 font-medium font-mono">
+              <span className="text-[10px] sm:text-[11px] dark:text-slate-500 text-slate-500 font-medium font-mono">
                 {selectedUsageDateLabel}
               </span>
             </div>
           </div>
 
           {/* iOS Style Segment Date Controller */}
-          <div className="flex items-center gap-1.5 bg-slate-200/60 dark:bg-slate-950/40 p-1.5 rounded-xl border border-slate-300 dark:border-white/5 w-full sm:w-auto justify-between">
+          <div className="flex items-center gap-1 sm:gap-1.5 bg-slate-200/60 dark:bg-slate-950/40 p-1 sm:p-1.5 rounded-xl border border-slate-300 dark:border-white/5 w-full sm:w-auto justify-between shrink-0">
             <button
               type="button"
               disabled={selectedUsageOffset <= 0}
@@ -975,7 +1093,8 @@ export default function Dashboard() {
         </div>
 
         {/* The Graphic Bar Chart Area including realistic grid and Green Average line */}
-        <div className="relative h-44 mb-6 border-b border-slate-200 dark:border-white/10" id="activity-monitor-grid-container">
+        <div className="activity-duration-scroll no-scrollbar -mx-2 px-2 pb-2 mb-4" role="region" aria-label="Scrollable activity duration chart">
+        <div className="activity-duration-canvas relative h-48 sm:h-44 mb-2 border-b border-slate-200 dark:border-white/10" id="activity-monitor-grid-container">
           
           {/* Horizontal Grid lines mirroring physical screenshot */}
           <div className="absolute inset-x-0 top-0 h-full flex flex-col justify-between pointer-events-none text-[9px] dark:text-slate-500/55 text-slate-600/70 font-mono">
@@ -1006,7 +1125,7 @@ export default function Dashboard() {
           )}
 
           {/* Columns Display Grid */}
-          <div className="absolute inset-0 pt-6 flex items-end justify-between px-2 sm:px-6">
+          <div className="absolute inset-0 pt-6 flex items-end justify-between px-3 sm:px-6">
             {completedMinutesByDayList.map((dayData) => {
               const heightPercent = Math.min((dayData.total / chartHeightScaleMinutes) * 100, 100);
               const isActiveDaySelected = dayData.dateStr === selectedUsageDateStr;
@@ -1039,7 +1158,7 @@ export default function Dashboard() {
                   {/* Faint bar Track guide resembling Apple Screen Time */}
                   <div className={`w-1.5 sm:w-3 h-full rounded-full overflow-hidden relative transition-all duration-300 flex flex-col justify-end ${
                     isActiveDaySelected 
-                      ? 'bg-slate-350 dark:bg-slate-800/80 ring-2 ring-blue-500/40 shadow-sm' 
+                      ? 'bg-slate-350 dark:bg-slate-800/80 ring-2 ring-cyan-500/40 shadow-sm' 
                       : 'bg-slate-205 dark:bg-slate-900/35 hover:bg-slate-300/80 dark:hover:bg-slate-900/60'
                   }`}>
                     
@@ -1051,7 +1170,7 @@ export default function Dashboard() {
                       {/* Producty Work stack (Blue) */}
                       {dayData.work > 0 && (
                         <div 
-                          className="w-full bg-gradient-to-t from-blue-600 to-blue-400" 
+                          className="w-full bg-gradient-to-t from-cyan-600 to-cyan-400" 
                           style={{ height: `${workPct}%` }}
                         />
                       )}
@@ -1067,7 +1186,7 @@ export default function Dashboard() {
                       {/* Fitness stack (Purple) */}
                       {dayData.fitness > 0 && (
                         <div 
-                          className="w-full bg-gradient-to-t from-violet-600 to-indigo-400" 
+                          className="w-full bg-gradient-to-t from-teal-600 to-cyan-400" 
                           style={{ height: `${fitnessPct}%` }}
                         />
                       )}
@@ -1098,7 +1217,7 @@ export default function Dashboard() {
 
                   {/* Column Label */}
                   <span className={`text-[8px] sm:text-[9.5px] font-bold mt-2 font-sans tracking-tight ${
-                    isActiveDaySelected ? 'text-blue-500 font-extrabold scale-110' : 'text-slate-500 dark:text-slate-550'
+                    isActiveDaySelected ? 'text-cyan-500 font-extrabold scale-110' : 'text-slate-500 dark:text-slate-550'
                   }`}>
                     {dayData.dayOfWeek}
                   </span>
@@ -1108,12 +1227,13 @@ export default function Dashboard() {
           </div>
 
         </div>
+        </div>
 
         {/* Category durations and statistics labels panel (Mirroring the activity-monitor list legend) */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-slate-200 dark:border-white/5" id="activity-monitor-legend-row">
           
           <div className="flex items-center gap-2.5 bg-slate-200/50 dark:bg-slate-950/20 p-2.5 rounded-xl border border-slate-300 dark:border-white/5 shadow-sm">
-            <span className="w-3 h-3 rounded bg-blue-500 flex-shrink-0" />
+            <span className="w-3 h-3 rounded bg-cyan-500 flex-shrink-0" />
             <div className="min-w-0 flex-1">
               <span className="text-[10px] uppercase font-bold dark:text-slate-500 text-slate-650 tracking-wider block">Productivity & Work</span>
               <span className="text-sm font-black dark:text-white text-slate-805 block">
@@ -1151,8 +1271,8 @@ export default function Dashboard() {
       {/* ----------------- CLEAN HUMAN SCALE FOOTER ----------------- */}
       <footer className="mt-12 pt-5 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3 text-[10px] font-mono text-slate-500">
         <div className="flex flex-wrap items-center gap-4 justify-center sm:justify-start">
-          <span className="text-blue-400 flex items-center gap-1 font-bold tracking-wider">
-            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse inline-block status-dot-active" />
+          <span className="text-cyan-400 flex items-center gap-1 font-bold tracking-wider">
+            <span className="w-1.5 h-1.5 bg-cyan-500 rounded-full animate-pulse inline-block status-dot-active" />
             Latency: {latency}ms
           </span>
           <span>Offline Storage Ready</span>

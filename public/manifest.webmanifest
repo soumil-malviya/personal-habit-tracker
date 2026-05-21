@@ -1,0 +1,67 @@
+{
+  "name": "NorthHabit",
+  "short_name": "NorthHabit",
+  "description": "Track habits, focus with Pomodoro, and grow your forest — calm and offline-first.",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#040405",
+  "theme_color": "#0e7490",
+  "categories": ["productivity", "health", "lifestyle"],
+  "shortcuts": [
+    {
+      "name": "Quick-add task",
+      "short_name": "Add task",
+      "description": "Capture a task for today.",
+      "url": "/app/todo?action=add",
+      "icons": [
+        {
+          "src": "/favicon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Start focus session",
+      "short_name": "Focus",
+      "description": "Open NorthHabit and begin a focus session.",
+      "url": "/app/pomodoro?action=start",
+      "icons": [
+        {
+          "src": "/favicon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Today's habits",
+      "short_name": "Today",
+      "description": "Jump to today's habit checklist.",
+      "url": "/app?view=today",
+      "icons": [
+        {
+          "src": "/favicon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
